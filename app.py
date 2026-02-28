@@ -47,10 +47,12 @@ def _generate_new_question(selected_tema: str) -> None:
     if "resposta_radio" in st.session_state:
         del st.session_state["resposta_radio"]
 
-with st.sidebar:
-    st.subheader("Configuração da questão")
-    tema = st.selectbox("Tema", temas)
-    gerar = st.button("Gerar nova questão", width="stretch")
+control_col1, control_col2 = st.columns([3, 1])
+with control_col1:
+    tema = st.selectbox("Tema", temas, key="tema_main")
+with control_col2:
+    st.write("")
+    gerar = st.button("Gerar nova questão", width="stretch", key="gerar_main")
 
 if "question" not in st.session_state:
     st.session_state.question = None
@@ -70,6 +72,9 @@ if "selected_style_files" not in st.session_state:
     st.session_state.selected_explanation_files = explanation_files
 
 if gerar:
+    _generate_new_question(tema)
+
+if st.session_state.question is None:
     _generate_new_question(tema)
 
 col1, col2 = st.columns([2, 1])
