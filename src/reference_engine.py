@@ -62,6 +62,13 @@ def _infer_category_and_version(filename: str) -> tuple[str, str]:
     return category, version
 
 
+def _seems_physiology_reference(item: dict[str, Any]) -> bool:
+    source = (item.get("source_file") or "").lower()
+    text_file = (item.get("text_file") or "").lower()
+    joined = f"{source} {text_file}"
+    return any(token in joined for token in ["guyton", "physiology", "fisiologia", "hall"])
+
+
 def ingest_pdf_file(uploaded_file, category: str = "geral", version_label: str = "") -> dict[str, Any]:
     _ensure_reference_dir()
     filename = _sanitize_name(uploaded_file.name)
@@ -153,9 +160,20 @@ def _ingest_pdf_path(pdf_path: Path) -> None:
     target_pdf = REFERENCE_DIR / filename
     text_file = REFERENCE_DIR / f"{Path(filename).stem}.txt"
 
+    existing_catalog = _load_catalog()
+    category, version = _infer_category_and_version(filename)
+
     if target_pdf.exists() and text_file.exists():
-        if text_file.name in {item.get("text_file") for item in _load_catalog()}:
-            return
+        for item in existing_catalog:
+            if item.get("text_file") == text_file.name:
+                current_category = item.get("category", "")
+                current_version = item.get("version", "")
+                if (not current_category or current_category == "geral") and category != "geral":
+                    item["category"] = category
+                if not current_version and version:
+                    item["version"] = version
+                _save_catalog(existing_catalog)
+                return
 
     try:
         raw_bytes = pdf_path.read_bytes()
@@ -172,7 +190,6 @@ def _ingest_pdf_path(pdf_path: Path) -> None:
         joined_text = "\n\n".join(pages)
         text_file.write_text(joined_text, encoding="utf-8")
 
-        category, version = _infer_category_and_version(filename)
         _upsert_catalog_entry(
             source_file=filename,
             text_file=text_file.name,
@@ -220,6 +237,19 @@ def get_reference_catalog() -> list[dict[str, Any]]:
                 }
             )
 
+    for item in catalog:
+        inferred_category, inferred_version = _infer_category_and_version(item.get("source_file", item.get("text_file", "")))
+        current_category = item.get("category", "")
+        current_version = item.get("version", "")
+
+        if (not current_category or current_category == "geral") and inferred_category != "geral":
+            item["category"] = inferred_category
+        if not current_version and inferred_version:
+            item["version"] = inferred_version
+
+        if item.get("category", "") == "geral" and _seems_physiology_reference(item):
+            item["category"] = "fisiologia"
+
     _save_catalog(catalog)
     return catalog
 
@@ -234,7 +264,11 @@ def get_default_reference_files() -> tuple[list[str], list[str]]:
         if item.get("category") in {"questoes", "diretriz", "geral"} and item.get("text_file")
     ]
 
-    physiology_items = [item for item in catalog if item.get("category") == "fisiologia" and item.get("text_file")]
+    physiology_items = [
+        item
+        for item in catalog
+        if (item.get("category") == "fisiologia" or _seems_physiology_reference(item)) and item.get("text_file")
+    ]
     if preferred_version:
         preferred = [
             item for item in physiology_items if preferred_version in item.get("version", "").lower() or preferred_version in item.get("source_file", "").lower()
