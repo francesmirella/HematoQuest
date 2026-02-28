@@ -24,6 +24,7 @@ venv/
 
 # User-uploaded reference material (keep local)
 data/references/
+data/private_references/
 
 # Streamlit cache/state
 .streamlit/

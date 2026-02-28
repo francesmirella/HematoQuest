@@ -2,7 +2,13 @@ import streamlit as st
 
 from src.db import get_recent, get_stats, init_db, save_attempt
 from src.question_engine import generate_question, load_blocks
-from src.reference_engine import build_style_context, get_reference_catalog, ingest_pdf_file
+from src.reference_engine import (
+    auto_ingest_local_references,
+    build_explanation_context,
+    build_style_context,
+    get_default_reference_files,
+    get_reference_labels,
+)
 
 st.set_page_config(page_title="HematoQuest", page_icon="🩸", layout="wide")
 
@@ -10,14 +16,32 @@ init_db()
 blocks = load_blocks()
 temas = ["Todos"] + sorted({item["tema"] for item in blocks})
 
+auto_ingest_local_references()
+
 st.title("🩸 HematoQuest")
 st.caption("Gerador de questões sobre anemias para prática rápida com correção e histórico local.")
 
 
 def _generate_new_question(selected_tema: str) -> None:
-    style_context = build_style_context(selected_tema)
-    st.session_state.question = generate_question(selected_tema, style_context=style_context)
+    auto_ingest_local_references()
+
+    style_files = st.session_state.get("selected_style_files", [])
+    explanation_files = st.session_state.get("selected_explanation_files", [])
+
+    style_context = build_style_context(selected_tema, selected_text_files=style_files)
+    explanation_context = build_explanation_context(
+        selected_tema,
+        selected_text_files=explanation_files,
+    )
+
+    st.session_state.question = generate_question(
+        selected_tema,
+        style_context=style_context,
+        explanation_context=explanation_context,
+    )
     st.session_state.style_active = bool(style_context)
+    st.session_state.explanation_active = bool(explanation_context)
+    st.session_state.explanation_sources = get_reference_labels(explanation_files)
     st.session_state.answered = False
     st.session_state.selected_option = None
     if "resposta_radio" in st.session_state:
@@ -28,30 +52,6 @@ with st.sidebar:
     tema = st.selectbox("Tema", temas)
     gerar = st.button("Gerar nova questão", width="stretch")
 
-    st.divider()
-    st.subheader("Base de referência (PDF)")
-    uploaded_pdfs = st.file_uploader(
-        "Enviar PDFs (provas, diretrizes, livros)",
-        type=["pdf"],
-        accept_multiple_files=True,
-        help="Os PDFs são processados localmente para extrair linguagem clínica e melhorar a qualidade das explicações.",
-    )
-    if st.button("Processar PDFs", width="stretch"):
-        if uploaded_pdfs:
-            processed = 0
-            total_pages = 0
-            for pdf in uploaded_pdfs:
-                result = ingest_pdf_file(pdf)
-                processed += 1
-                total_pages += result["pages"]
-            st.success(f"{processed} PDF(s) processado(s), {total_pages} páginas lidas.")
-        else:
-            st.warning("Envie ao menos 1 PDF para processar.")
-
-    catalog = get_reference_catalog()
-    st.caption(f"Referências ativas: {len(catalog)} arquivo(s)")
-    st.caption("Você pode incluir livro de fisiologia para reforçar as explicações da correção.")
-
 if "question" not in st.session_state:
     st.session_state.question = None
 if "answered" not in st.session_state:
@@ -60,6 +60,14 @@ if "selected_option" not in st.session_state:
     st.session_state.selected_option = None
 if "style_active" not in st.session_state:
     st.session_state.style_active = False
+if "explanation_active" not in st.session_state:
+    st.session_state.explanation_active = False
+if "explanation_sources" not in st.session_state:
+    st.session_state.explanation_sources = []
+if "selected_style_files" not in st.session_state:
+    style_files, explanation_files = get_default_reference_files()
+    st.session_state.selected_style_files = style_files
+    st.session_state.selected_explanation_files = explanation_files
 
 if gerar:
     _generate_new_question(tema)
@@ -111,6 +119,13 @@ with col1:
 
             st.markdown("**Explicação:**")
             st.write(q.explicacao)
+            if st.session_state.explanation_active:
+                st.caption("Base teórica: referências selecionadas aplicadas na explicação")
+            if st.session_state.explanation_sources:
+                preview = st.session_state.explanation_sources[:2]
+                extra = len(st.session_state.explanation_sources) - len(preview)
+                suffix = f" (+{extra} referência(s))" if extra > 0 else ""
+                st.caption(f"Referência bibliográfica: {'; '.join(preview)}{suffix}")
             st.caption(f"Formato: {q.tipo}")
             st.caption(f"Dificuldade estimada: {q.dificuldade}")
             st.caption(f"Fonte: {q.fonte}")

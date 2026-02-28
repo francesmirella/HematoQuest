@@ -289,7 +289,11 @@ BUILDERS = {
 }
 
 
-def generate_template_question(tema: str, style_context: str = "") -> Question:
+def generate_template_question(
+    tema: str,
+    style_context: str = "",
+    explanation_context: str = "",
+) -> Question:
     blocks = load_blocks()
     filtered = blocks if tema == "Todos" else [item for item in blocks if item["tema"] == tema]
     selected = random.choice(filtered)
@@ -300,6 +304,13 @@ def generate_template_question(tema: str, style_context: str = "") -> Question:
     formatted_options = _format_alternatives(options)
     correct_tagged = formatted_options[options.index(correct)]
 
+    explanation = selected["explicacao"]
+    if explanation_context:
+        explanation = (
+            f"{explanation} "
+            "Fundamento fisiopatológico: correlacionar produção, destruição e reserva funcional eritrocitária no contexto clínico apresentado."
+        )
+
     return Question(
         tema=selected["tema"],
         dificuldade=FORMAT_DIFFICULTY[format_code],
@@ -307,19 +318,31 @@ def generate_template_question(tema: str, style_context: str = "") -> Question:
         pergunta=prompt,
         alternativas=formatted_options,
         resposta_correta=correct_tagged,
-        explicacao=selected["explicacao"],
+        explicacao=explanation,
         fonte=selected["fonte"],
     )
 
 
-def generate_question(tema: str, style_context: str = "") -> Question:
+def generate_question(
+    tema: str,
+    style_context: str = "",
+    explanation_context: str = "",
+) -> Question:
     mode = os.getenv("HEMATOQUEST_MODE", "template").lower().strip()
     if mode != "llm":
-        return generate_template_question(tema, style_context=style_context)
+        return generate_template_question(
+            tema,
+            style_context=style_context,
+            explanation_context=explanation_context,
+        )
 
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     if not api_key:
-        return generate_template_question(tema, style_context=style_context)
+        return generate_template_question(
+            tema,
+            style_context=style_context,
+            explanation_context=explanation_context,
+        )
 
     try:
         from openai import OpenAI
@@ -353,6 +376,7 @@ def generate_question(tema: str, style_context: str = "") -> Question:
         - sem markdown, sem texto fora do JSON
         - usar como base clínica: {json.dumps(block, ensure_ascii=False)}
         - usar contexto de estilo dos PDFs (sem copiar literal): {style_context[:2000] if style_context else 'sem contexto adicional'}
+        - usar contexto teórico para a explicação (sem copiar literal): {explanation_context[:2000] if explanation_context else 'sem contexto adicional'}
         """
 
         client = OpenAI(api_key=api_key)
@@ -374,4 +398,8 @@ def generate_question(tema: str, style_context: str = "") -> Question:
             fonte=payload.get("fonte", block.get("fonte", "")),
         )
     except Exception:
-        return generate_template_question(tema, style_context=style_context)
+        return generate_template_question(
+            tema,
+            style_context=style_context,
+            explanation_context=explanation_context,
+        )
