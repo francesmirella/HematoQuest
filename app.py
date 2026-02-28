@@ -1,3 +1,5 @@
+import os
+
 import streamlit as st
 
 from src.db import get_recent, get_stats, init_db, save_attempt
@@ -8,6 +10,7 @@ from src.reference_engine import (
     build_style_context,
     get_default_reference_files,
     get_reference_labels,
+    ingest_pdf_file,
 )
 
 st.set_page_config(page_title="HematoQuest", page_icon="🩸", layout="wide")
@@ -20,6 +23,87 @@ auto_ingest_local_references()
 
 st.title("🩸 HematoQuest")
 st.caption("Gerador de questões sobre anemias para prática rápida com correção e histórico local.")
+
+
+def _get_admin_password() -> str:
+    secret_password = ""
+    try:
+        if "HEMATOQUEST_ADMIN_PASSWORD" in st.secrets:
+            secret_password = str(st.secrets["HEMATOQUEST_ADMIN_PASSWORD"]).strip()
+    except Exception:
+        secret_password = ""
+
+    if secret_password:
+        return secret_password
+
+    return os.getenv("HEMATOQUEST_ADMIN_PASSWORD", "").strip()
+
+
+def _show_admin_panel() -> None:
+    query_value = str(st.query_params.get("admin", "0")).lower().strip()
+    admin_requested = query_value in {"1", "true", "yes"}
+    admin_password = _get_admin_password()
+
+    if not admin_requested or not admin_password:
+        return
+
+    if "admin_authenticated" not in st.session_state:
+        st.session_state.admin_authenticated = False
+
+    with st.sidebar.expander("Admin", expanded=not st.session_state.admin_authenticated):
+        if not st.session_state.admin_authenticated:
+            typed_password = st.text_input("Senha admin", type="password", key="admin_password_input")
+            if st.button("Entrar", key="admin_login_btn", width="stretch"):
+                if typed_password == admin_password:
+                    st.session_state.admin_authenticated = True
+                    st.success("Acesso liberado")
+                    st.rerun()
+                else:
+                    st.error("Senha inválida")
+            return
+
+        category_option = st.selectbox(
+            "Tipo",
+            [
+                ("", "Auto (inferir pelo nome)"),
+                ("fisiologia", "Fisiologia"),
+                ("questoes", "Questões/Provas"),
+                ("diretriz", "Diretriz"),
+                ("geral", "Geral"),
+            ],
+            format_func=lambda item: item[1],
+            key="admin_category",
+        )
+        version_label = st.text_input(
+            "Versão/Edição (opcional)",
+            placeholder="Ex.: Guyton 14ª edição",
+            key="admin_version",
+        )
+        uploaded = st.file_uploader(
+            "Enviar PDFs",
+            type=["pdf"],
+            accept_multiple_files=True,
+            key="admin_uploader",
+        )
+
+        if st.button("Processar PDFs", key="admin_process_btn", width="stretch"):
+            if not uploaded:
+                st.warning("Selecione ao menos um PDF")
+            else:
+                processed = 0
+                for pdf in uploaded:
+                    ingest_pdf_file(
+                        uploaded_file=pdf,
+                        category=category_option[0],
+                        version_label=version_label,
+                    )
+                    processed += 1
+
+                auto_ingest_local_references()
+                style_files, explanation_files = get_default_reference_files()
+                st.session_state.selected_style_files = style_files
+                st.session_state.selected_explanation_files = explanation_files
+                st.success(f"{processed} arquivo(s) processado(s)")
 
 
 def _generate_new_question(selected_tema: str) -> None:
@@ -54,6 +138,8 @@ with control_col2:
     st.write("")
     gerar = st.button("Gerar nova questão", width="stretch", key="gerar_main")
 
+_show_admin_panel()
+
 if "question" not in st.session_state:
     st.session_state.question = None
 if "answered" not in st.session_state:
@@ -66,10 +152,10 @@ if "explanation_active" not in st.session_state:
     st.session_state.explanation_active = False
 if "explanation_sources" not in st.session_state:
     st.session_state.explanation_sources = []
-if "selected_style_files" not in st.session_state:
-    style_files, explanation_files = get_default_reference_files()
-    st.session_state.selected_style_files = style_files
-    st.session_state.selected_explanation_files = explanation_files
+
+style_files, explanation_files = get_default_reference_files()
+st.session_state.selected_style_files = style_files
+st.session_state.selected_explanation_files = explanation_files
 
 if gerar:
     _generate_new_question(tema)

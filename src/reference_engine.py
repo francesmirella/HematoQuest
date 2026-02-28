@@ -69,7 +69,7 @@ def _seems_physiology_reference(item: dict[str, Any]) -> bool:
     return any(token in joined for token in ["guyton", "physiology", "fisiologia", "hall"])
 
 
-def ingest_pdf_file(uploaded_file, category: str = "geral", version_label: str = "") -> dict[str, Any]:
+def ingest_pdf_file(uploaded_file, category: str = "", version_label: str = "") -> dict[str, Any]:
     _ensure_reference_dir()
     filename = _sanitize_name(uploaded_file.name)
     pdf_path = REFERENCE_DIR / filename
