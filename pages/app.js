@@ -1,4 +1,4 @@
-const QUESTION_BANK = [
+const FALLBACK_QUESTION_BANK = [
   {
     tema: "Ferropriva",
     tipo: "Diagnóstico + conduta",
@@ -131,6 +131,8 @@ const QUESTION_BANK = [
   },
 ];
 
+let QUESTION_BANK = [];
+
 const state = {
   currentQuestion: null,
   stats: loadStats(),
@@ -172,6 +174,26 @@ function pickQuestion() {
   const pool = theme === "Todos" ? QUESTION_BANK : QUESTION_BANK.filter(q => q.tema === theme);
   if (!pool.length) return null;
   return pool[Math.floor(Math.random() * pool.length)];
+}
+
+async function loadQuestionBank() {
+  try {
+    const response = await fetch("./questions.json", { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Falha ao carregar questions.json: ${response.status}`);
+    }
+    const payload = await response.json();
+    if (!Array.isArray(payload) || payload.length === 0) {
+      throw new Error("questions.json vazio ou inválido");
+    }
+    QUESTION_BANK = payload;
+    newQuestionBtn.disabled = false;
+    questionStem.textContent = `Banco carregado com ${QUESTION_BANK.length} questões. Clique em Nova questão.`;
+  } catch {
+    QUESTION_BANK = FALLBACK_QUESTION_BANK;
+    newQuestionBtn.disabled = false;
+    questionStem.textContent = "Não foi possível carregar o banco completo. Usando banco local reduzido.";
+  }
 }
 
 function renderQuestion(question) {
@@ -242,3 +264,5 @@ resetStatsBtn.addEventListener("click", () => {
 });
 
 updateScoreLine();
+newQuestionBtn.disabled = true;
+loadQuestionBank();
