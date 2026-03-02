@@ -741,6 +741,43 @@ def _format_alternatives(options: list[str]) -> list[str]:
     return [f"({letter}) {text}" for letter, text in zip(letters, options)]
 
 
+def _ensure_four_unique_options(options: list[str], correct: str) -> list[str]:
+    """Garante 4 alternativas únicas com a correta presente."""
+    normalized: list[str] = []
+    for option in options:
+        text = " ".join(str(option).split()).strip()
+        if text and text not in normalized:
+            normalized.append(text)
+
+    correct_text = " ".join(str(correct).split()).strip()
+    if correct_text and correct_text not in normalized:
+        normalized.insert(0, correct_text)
+
+    fallback_pool = [
+        "esfregaço periférico e reticulócitos; padrão de hemólise é insuficiente para confirmar isoladamente essa hipótese",
+        "ferritina e saturação de transferrina; perfil de ferro não distingue de forma principal essa etiologia no contexto apresentado",
+        "VCM e RDW isolados; podem apoiar a investigação, mas têm baixa especificidade para discriminação definitiva",
+        "LDH e bilirrubina indireta isolados; indicam hemólise, porém sem definir o mecanismo causal",
+        "coagulograma completo; útil em cenários selecionados, mas não confirma o diagnóstico principal deste caso",
+    ]
+
+    for fallback in fallback_pool:
+        if len(normalized) >= 4:
+            break
+        if fallback not in normalized:
+            normalized.append(fallback)
+
+    while len(normalized) < 4:
+        normalized.append(f"alternativa complementar {len(normalized) + 1}")
+
+    trimmed = normalized[:4]
+    if correct_text and correct_text not in trimmed:
+        trimmed[-1] = correct_text
+
+    random.shuffle(trimmed)
+    return trimmed
+
+
 # Perfis clínicos EXPANDIDOS para distratores plausíveis com sobreposição de achados
 CLINICAL_SCENARIOS = {
     "Anemia ferropriva": {
@@ -1917,8 +1954,10 @@ def _generate_template_question_internal(
     finally:
         _FORCED_CASE_VARIANT_BY_DIAG[diag] = None
 
-    formatted_options = _format_alternatives(options)
-    correct_tagged = formatted_options[options.index(correct)]
+    safe_options = _ensure_four_unique_options(options, correct)
+    formatted_options = _format_alternatives(safe_options)
+    correct_index = safe_options.index(" ".join(str(correct).split()).strip())
+    correct_tagged = formatted_options[correct_index]
     
     # Identifica alternativas erradas para a explicação
     wrong_options = [opt for opt in formatted_options if opt != correct_tagged]

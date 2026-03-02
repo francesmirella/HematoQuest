@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connections - Anemias</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-hover: #334155;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --selected: #0ea5e9;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --err: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+    .app {
+      width: min(900px, 100%);
+      background: #0b1222;
+      border: 1px solid #1f2a44;
+      border-radius: 16px;
+      padding: 18px;
+    }
+    h1 { margin: 0 0 6px; font-size: 1.4rem; }
+    p { margin: 0; color: var(--muted); }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .status { color: var(--muted); font-size: .95rem; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(130px, 1fr));
+      gap: 10px;
+      margin: 14px 0;
+    }
+    .tile {
+      border: 1px solid #26324d;
+      background: var(--card);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 12px;
+      min-height: 64px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: .15s ease;
+      user-select: none;
+    }
+    .tile:hover { background: var(--card-hover); }
+    .tile.selected {
+      border-color: #38bdf8;
+      background: #0c4a6e;
+    }
+    .tile.locked {
+      cursor: default;
+      border-color: #3f556f;
+      opacity: 0.86;
+    }
+    .controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    button {
+      border: 1px solid #2f3b59;
+      background: #17223a;
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover { background: #243353; }
+    .message {
+      margin-top: 12px;
+      min-height: 24px;
+      font-weight: 600;
+    }
+    .ok { color: var(--ok); }
+    .warn { color: var(--warn); }
+    .err { color: var(--err); }
+    .groups {
+      margin-top: 12px;
+      display: grid;
+      gap: 8px;
+    }
+    .group {
+      border-radius: 10px;
+      padding: 10px;
+      border: 1px solid #33415f;
+      background: #111a2f;
+    }
+    .group h3 {
+      margin: 0 0 6px;
+      font-size: .98rem;
+      color: #cbd5e1;
+    }
+    .group p {
+      margin: 0;
+      color: #dbe5f5;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="top">
+      <div>
+        <h1>Connections - Anemias</h1>
+        <p>Selecione 4 termos que pertençam ao mesmo grupo.</p>
+      </div>
+      <div class="status" id="status">Erros restantes: 4</div>
+    </div>
+
+    <section class="grid" id="grid"></section>
+
+    <div class="controls">
+      <button id="submitBtn">Confirmar grupo</button>
+      <button id="clearBtn">Limpar seleção</button>
+      <button id="shuffleBtn">Embaralhar</button>
+      <button id="newBtn">Novo jogo</button>
+    </div>
+
+    <div class="message" id="message"></div>
+    <section class="groups" id="foundGroups"></section>
+  </main>
+
+  <script>
+    const SOURCE_GROUPS = [
+      {
+        name: "Ferropriva",
+        items: ["Ferritina baixa", "TIBC elevado", "Microcitose", "Hipocromia"]
+      },
+      {
+        name: "Megaloblástica (B12)",
+        items: ["VCM > 100 fL", "Neutrófilos hipersegmentados", "Ácido metilmalônico alto", "Parestesias"]
+      },
+      {
+        name: "Hemólise",
+        items: ["LDH elevado", "Bilirrubina indireta alta", "Haptoglobina baixa", "Reticulocitose"]
+      },
+      {
+        name: "Aplásica",
+        items: ["Pancitopenia", "Reticulócitos baixos", "Medula hipocelular", "Sem esplenomegalia"]
+      }
+    ];
+
+    const grid = document.getElementById('grid');
+    const message = document.getElementById('message');
+    const status = document.getElementById('status');
+    const foundGroups = document.getElementById('foundGroups');
+
+    const submitBtn = document.getElementById('submitBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const shuffleBtn = document.getElementById('shuffleBtn');
+    const newBtn = document.getElementById('newBtn');
+
+    let tiles = [];
+    let selected = new Set();
+    let solvedGroups = new Set();
+    let mistakesLeft = 4;
+
+    function shuffle(arr) {
+      const clone = [...arr];
+      for (let i = clone.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [clone[i], clone[j]] = [clone[j], clone[i]];
+      }
+      return clone;
+    }
+
+    function setupGame() {
+      selected.clear();
+      solvedGroups.clear();
+      mistakesLeft = 4;
+      message.textContent = '';
+      message.className = 'message';
+      foundGroups.innerHTML = '';
+      status.textContent = `Erros restantes: ${mistakesLeft}`;
+
+      const flat = SOURCE_GROUPS.flatMap(group => group.items.map(item => ({
+        item,
+        group: group.name,
+        locked: false,
+      })));
+
+      tiles = shuffle(flat);
+      render();
+    }
+
+    function render() {
+      grid.innerHTML = '';
+      for (const tile of tiles) {
+        if (tile.locked) continue;
+        const btn = document.createElement('button');
+        btn.className = 'tile';
+        btn.textContent = tile.item;
+        if (selected.has(tile.item)) btn.classList.add('selected');
+        btn.onclick = () => toggleSelect(tile.item);
+        grid.appendChild(btn);
+      }
+    }
+
+    function toggleSelect(item) {
+      if (selected.has(item)) {
+        selected.delete(item);
+      } else {
+        if (selected.size >= 4) return;
+        selected.add(item);
+      }
+      render();
+    }
+
+    function clearSelection() {
+      selected.clear();
+      render();
+      setMessage('Seleção limpa.', 'warn');
+    }
+
+    function setMessage(text, type) {
+      message.textContent = text;
+      message.className = `message ${type || ''}`;
+    }
+
+    function lockSolved(groupName, items) {
+      solvedGroups.add(groupName);
+      tiles = tiles.map(t => items.includes(t.item) ? { ...t, locked: true } : t);
+      const group = SOURCE_GROUPS.find(g => g.name === groupName);
+      const card = document.createElement('article');
+      card.className = 'group';
+      card.innerHTML = `<h3>${groupName}</h3><p>${group.items.join(' · ')}</p>`;
+      foundGroups.appendChild(card);
+      selected.clear();
+      render();
+    }
+
+    function checkSelection() {
+      if (selected.size !== 4) {
+        setMessage('Selecione exatamente 4 termos.', 'warn');
+        return;
+      }
+
+      const picks = [...selected];
+      const match = SOURCE_GROUPS.find(group =>
+        group.items.every(item => picks.includes(item))
+      );
+
+      if (match && !solvedGroups.has(match.name)) {
+        lockSolved(match.name, match.items);
+        setMessage(`Correto: grupo "${match.name}" encontrado.`, 'ok');
+        if (solvedGroups.size === SOURCE_GROUPS.length) {
+          setMessage('Parabéns! Você completou todos os grupos.', 'ok');
+        }
+        return;
+      }
+
+      mistakesLeft -= 1;
+      status.textContent = `Erros restantes: ${mistakesLeft}`;
+      if (mistakesLeft <= 0) {
+        setMessage('Fim de jogo. Clique em "Novo jogo" para tentar novamente.', 'err');
+        selected.clear();
+        render();
+        submitBtn.disabled = true;
+        clearBtn.disabled = true;
+      } else {
+        setMessage('Grupo incorreto. Tente outra combinação.', 'err');
+      }
+    }
+
+    submitBtn.addEventListener('click', checkSelection);
+    clearBtn.addEventListener('click', clearSelection);
+    shuffleBtn.addEventListener('click', () => {
+      const unlocked = tiles.filter(t => !t.locked);
+      const locked = tiles.filter(t => t.locked);
+      tiles = [...shuffle(unlocked), ...locked];
+      render();
+      setMessage('Termos embaralhados.', 'warn');
+    });
+    newBtn.addEventListener('click', () => {
+      submitBtn.disabled = false;
+      clearBtn.disabled = false;
+      setupGame();
+    });
+
+    setupGame();
+  </script>
+</body>
+</html>
