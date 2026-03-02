@@ -15,6 +15,10 @@
       --ok: #22c55e;
       --warn: #f59e0b;
       --err: #ef4444;
+      --easy: #fde047;
+      --medium-easy: #86efac;
+      --medium: #60a5fa;
+      --hard: #c084fc;
     }
     * { box-sizing: border-box; }
     body {
@@ -45,6 +49,23 @@
       flex-wrap: wrap;
     }
     .status { color: var(--muted); font-size: .95rem; }
+    .legend {
+      margin: 10px 0 4px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pill {
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: .8rem;
+      font-weight: 700;
+      color: #0b1222;
+    }
+    .pill.easy { background: var(--easy); }
+    .pill.medium-easy { background: var(--medium-easy); }
+    .pill.medium { background: var(--medium); }
+    .pill.hard { background: var(--hard); }
     .grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(130px, 1fr));
@@ -107,6 +128,14 @@
       padding: 10px;
       border: 1px solid #33415f;
       background: #111a2f;
+      opacity: 1;
+    }
+    .group.easy { background: color-mix(in srgb, var(--easy) 18%, #111a2f); border-color: color-mix(in srgb, var(--easy) 45%, #33415f); }
+    .group.medium-easy { background: color-mix(in srgb, var(--medium-easy) 16%, #111a2f); border-color: color-mix(in srgb, var(--medium-easy) 40%, #33415f); }
+    .group.medium { background: color-mix(in srgb, var(--medium) 16%, #111a2f); border-color: color-mix(in srgb, var(--medium) 40%, #33415f); }
+    .group.hard { background: color-mix(in srgb, var(--hard) 16%, #111a2f); border-color: color-mix(in srgb, var(--hard) 40%, #33415f); }
+    .group.reveal {
+      animation: popIn .45s ease both;
     }
     .group h3 {
       margin: 0 0 6px;
@@ -118,6 +147,19 @@
       color: #dbe5f5;
       font-weight: 600;
     }
+    .group .meta {
+      margin-bottom: 6px;
+      font-size: .78rem;
+      font-weight: 800;
+      color: #e2e8f0;
+      opacity: .9;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: translateY(8px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
   </style>
 </head>
 <body>
@@ -128,6 +170,13 @@
         <p>Selecione 4 termos que pertençam ao mesmo grupo.</p>
       </div>
       <div class="status" id="status">Erros restantes: 4</div>
+    </div>
+
+    <div class="legend">
+      <span class="pill easy">Fácil</span>
+      <span class="pill medium-easy">Médio-fácil</span>
+      <span class="pill medium">Médio</span>
+      <span class="pill hard">Difícil</span>
     </div>
 
     <section class="grid" id="grid"></section>
@@ -147,18 +196,26 @@
     const SOURCE_GROUPS = [
       {
         name: "Ferropriva",
+        difficulty: "easy",
+        difficultyLabel: "Fácil",
         items: ["Ferritina baixa", "TIBC elevado", "Microcitose", "Hipocromia"]
       },
       {
         name: "Megaloblástica (B12)",
+        difficulty: "medium-easy",
+        difficultyLabel: "Médio-fácil",
         items: ["VCM > 100 fL", "Neutrófilos hipersegmentados", "Ácido metilmalônico alto", "Parestesias"]
       },
       {
         name: "Hemólise",
+        difficulty: "medium",
+        difficultyLabel: "Médio",
         items: ["LDH elevado", "Bilirrubina indireta alta", "Haptoglobina baixa", "Reticulocitose"]
       },
       {
         name: "Aplásica",
+        difficulty: "hard",
+        difficultyLabel: "Difícil",
         items: ["Pancitopenia", "Reticulócitos baixos", "Medula hipocelular", "Sem esplenomegalia"]
       }
     ];
@@ -177,6 +234,16 @@
     let selected = new Set();
     let solvedGroups = new Set();
     let mistakesLeft = 4;
+
+    function difficultyRank(level) {
+      const map = {
+        "easy": 1,
+        "medium-easy": 2,
+        "medium": 3,
+        "hard": 4,
+      };
+      return map[level] || 99;
+    }
 
     function shuffle(arr) {
       const clone = [...arr];
@@ -240,14 +307,33 @@
       message.className = `message ${type || ''}`;
     }
 
+    function appendGroupCard(group, withAnimation = false, delayMs = 0) {
+      const card = document.createElement('article');
+      card.className = `group ${group.difficulty}`;
+      if (withAnimation) card.classList.add('reveal');
+      if (withAnimation) card.style.animationDelay = `${delayMs}ms`;
+      card.innerHTML = `
+        <div class="meta">${group.difficultyLabel}</div>
+        <h3>${group.name}</h3>
+        <p>${group.items.join(' · ')}</p>
+      `;
+      foundGroups.appendChild(card);
+    }
+
+    function revealAllGroupsAnimated() {
+      foundGroups.innerHTML = '';
+      const ordered = [...SOURCE_GROUPS].sort((a, b) => difficultyRank(a.difficulty) - difficultyRank(b.difficulty));
+      ordered.forEach((group, idx) => appendGroupCard(group, true, idx * 180));
+      submitBtn.disabled = true;
+      clearBtn.disabled = true;
+      status.textContent = 'Rodada finalizada — respostas reveladas';
+    }
+
     function lockSolved(groupName, items) {
       solvedGroups.add(groupName);
       tiles = tiles.map(t => items.includes(t.item) ? { ...t, locked: true } : t);
       const group = SOURCE_GROUPS.find(g => g.name === groupName);
-      const card = document.createElement('article');
-      card.className = 'group';
-      card.innerHTML = `<h3>${groupName}</h3><p>${group.items.join(' · ')}</p>`;
-      foundGroups.appendChild(card);
+      appendGroupCard(group);
       selected.clear();
       render();
     }
@@ -267,7 +353,8 @@
         lockSolved(match.name, match.items);
         setMessage(`Correto: grupo "${match.name}" encontrado.`, 'ok');
         if (solvedGroups.size === SOURCE_GROUPS.length) {
-          setMessage('Parabéns! Você completou todos os grupos.', 'ok');
+          setMessage('Parabéns! Você completou todos os grupos. Revelando respostas por dificuldade...', 'ok');
+          setTimeout(() => revealAllGroupsAnimated(), 250);
         }
         return;
       }
@@ -275,11 +362,10 @@
       mistakesLeft -= 1;
       status.textContent = `Erros restantes: ${mistakesLeft}`;
       if (mistakesLeft <= 0) {
-        setMessage('Fim de jogo. Clique em "Novo jogo" para tentar novamente.', 'err');
+        setMessage('Fim de jogo. Revelando as respostas por dificuldade...', 'err');
         selected.clear();
         render();
-        submitBtn.disabled = true;
-        clearBtn.disabled = true;
+        revealAllGroupsAnimated();
       } else {
         setMessage('Grupo incorreto. Tente outra combinação.', 'err');
       }
