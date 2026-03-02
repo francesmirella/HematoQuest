@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HematoQuest Web</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <h1>HematoQuest</h1>
+      <p>Treino rápido de anemias em versão web estática</p>
+    </header>
+
+    <section class="panel controls">
+      <label for="themeSelect">Tema</label>
+      <select id="themeSelect">
+        <option value="Todos">Todos</option>
+        <option value="Ferropriva">Ferropriva</option>
+        <option value="Megaloblástica">Megaloblástica</option>
+        <option value="Doença crônica">Doença crônica</option>
+        <option value="Hemolítica">Hemolítica</option>
+        <option value="Aplásica">Aplásica</option>
+      </select>
+      <button id="newQuestionBtn">Nova questão</button>
+      <button id="resetStatsBtn" class="secondary">Resetar placar</button>
+    </section>
+
+    <section class="panel" id="questionPanel">
+      <h2 id="questionType">Questão</h2>
+      <p id="questionStem">Clique em Nova questão para começar.</p>
+      <div id="options" class="options"></div>
+      <div class="actions">
+        <button id="checkBtn">Corrigir</button>
+      </div>
+      <div id="feedback" class="feedback"></div>
+      <div id="explanation" class="explanation"></div>
+    </section>
+
+    <section class="panel stats">
+      <h3>Desempenho</h3>
+      <p id="scoreLine">Acertos: 0 | Erros: 0 | Taxa: 0%</p>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>

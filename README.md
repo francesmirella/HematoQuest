@@ -109,6 +109,24 @@ Se não configurar secrets, o app roda em modo `template` automaticamente.
 - O Streamlit Community Cloud pode entrar em modo de suspensão após período sem uso.
 - Ao abrir o link novamente, ele acorda em alguns segundos.
 
+## HematoQuest Web no GitHub Pages (sem Streamlit)
+
+Também há uma versão web estática do HematoQuest em `pages/`, com deploy automático via GitHub Actions.
+
+### Como ativar
+1. No GitHub, abra o repositório `francesmirella/HematoQuest`.
+2. Vá em **Settings → Pages**.
+3. Em **Build and deployment**, selecione **Source: GitHub Actions**.
+4. Faça push para `main` (ou execute manualmente o workflow **Deploy GitHub Pages**).
+
+### Link esperado
+- `https://francesmirella.github.io/HematoQuest/`
+
+Arquivos da versão web:
+- `pages/index.html`
+- `pages/styles.css`
+- `pages/app.js`
+
 ### Opção 2: rodar local em qualquer notebook
 - Clonar projeto, instalar `requirements.txt`, executar `streamlit run app.py`.
 
