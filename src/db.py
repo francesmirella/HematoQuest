@@ -73,3 +73,11 @@ def get_recent(limit: int = 10) -> list[dict[str, Any]]:
             (limit,),
         ).fetchall()
     return [dict(row) for row in rows]
+
+
+def clear_history() -> int:
+    """Limpa todo o histórico de tentativas. Retorna número de registros removidos."""
+    with get_connection() as conn:
+        count = conn.execute("SELECT COUNT(*) AS c FROM attempts").fetchone()["c"]
+        conn.execute("DELETE FROM attempts")
+    return count

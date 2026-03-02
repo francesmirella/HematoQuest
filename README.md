@@ -82,11 +82,32 @@ Cada bloco possui:
 - `src/db.py`: persistência SQLite
 - `hematoquest.db`: criado automaticamente no primeiro uso
 
-## Compartilhar com colegas (simples)
-### Opção 1 (mais rápida): Streamlit Community Cloud
-1. Suba este projeto para GitHub.
-2. Conecte ao Streamlit Cloud.
-3. Se usar `llm`, adicione `OPENAI_API_KEY` em Secrets.
+## Publicar para acessar do celular (com PC desligado)
+### Streamlit Community Cloud (recomendado)
+1. Confirme que o repositório está no GitHub (branch `main`).
+2. Acesse https://share.streamlit.io e faça login com GitHub.
+3. Clique em **Create app** e preencha:
+	- Repository: `francesmirella/HematoQuest`
+	- Branch: `main`
+	- Main file path: `app.py`
+4. Clique em **Deploy**.
+
+O link público ficará no formato:
+- `https://hematoquest-xxxx.streamlit.app`
+
+### Secrets (somente se usar modo LLM)
+No app publicado, abra **Settings → Secrets** e adicione:
+
+```toml
+HEMATOQUEST_MODE = "llm"
+OPENAI_API_KEY = "sua_chave_aqui"
+```
+
+Se não configurar secrets, o app roda em modo `template` automaticamente.
+
+### Observação importante
+- O Streamlit Community Cloud pode entrar em modo de suspensão após período sem uso.
+- Ao abrir o link novamente, ele acorda em alguns segundos.
 
 ### Opção 2: rodar local em qualquer notebook
 - Clonar projeto, instalar `requirements.txt`, executar `streamlit run app.py`.

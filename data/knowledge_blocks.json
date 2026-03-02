@@ -6,13 +6,15 @@
       "fadiga progressiva",
       "palidez cutâneo-mucosa",
       "pica",
-      "coiloníquia"
+      "coiloníquia",
+      "queilite angular"
     ],
     "laboratorio": [
       "Hb baixa",
       "VCM baixo",
       "ferritina baixa",
-      "saturação de transferrina baixa"
+      "saturação de transferrina baixa",
+      "TIBC elevado"
     ],
     "explicacao": "A anemia ferropriva costuma ser microcítica e hipocrômica, com ferritina reduzida e baixa saturação de transferrina. Em adultos, deve-se investigar perda crônica de sangue, especialmente gastrointestinal e ginecológica.",
     "fonte": "Resumo próprio baseado em hematologia clínica"
@@ -24,13 +26,16 @@
       "parestesias",
       "glossite",
       "fadiga",
-      "distúrbio de marcha"
+      "distúrbio de marcha",
+      "alteração cognitiva"
     ],
     "laboratorio": [
       "Hb baixa",
       "VCM alto",
       "B12 sérica baixa",
-      "neutrófilos hipersegmentados"
+      "neutrófilos hipersegmentados",
+      "LDH elevado",
+      "ácido metilmalônico elevado"
     ],
     "explicacao": "A deficiência de B12 gera anemia macrocítica e alterações neurológicas. A presença de parestesias e alteração de marcha favorece B12 em relação ao folato.",
     "fonte": "Resumo próprio baseado em hematologia clínica"
@@ -48,25 +53,30 @@
       "Hb baixa",
       "VCM normal ou discretamente baixo",
       "ferritina normal ou alta",
-      "ferro sérico baixo"
+      "ferro sérico baixo",
+      "TIBC baixo",
+      "PCR elevado"
     ],
     "explicacao": "Na anemia da doença crônica, a hepcidina elevada reduz a disponibilidade de ferro, com ferritina preservada ou alta e ferro sérico reduzido.",
     "fonte": "Resumo próprio baseado em hematologia clínica"
   },
   {
     "tema": "Hemolítica",
-    "diagnostico": "Anemia hemolítica",
+    "diagnostico": "Anemia hemolítica autoimune",
     "pistas": [
       "icterícia",
       "urina escura",
       "esplenomegalia",
-      "fadiga"
+      "fadiga",
+      "quadro gripal prévio"
     ],
     "laboratorio": [
       "Hb baixa",
       "reticulocitose",
       "LDH elevada",
-      "haptoglobina reduzida"
+      "haptoglobina reduzida",
+      "Coombs direto positivo",
+      "bilirrubina indireta elevada"
     ],
     "explicacao": "A hemólise cursa com aumento de destruição eritrocitária, com reticulocitose, LDH elevada e queda da haptoglobina. A investigação deve direcionar para causa imune, hereditária, microangiopática ou medicamentosa.",
     "fonte": "Resumo próprio baseado em hematologia clínica"
@@ -78,12 +88,15 @@
       "palidez",
       "infecções recorrentes",
       "sangramentos",
-      "fadiga intensa"
+      "fadiga intensa",
+      "petéquias"
     ],
     "laboratorio": [
       "pancitopenia",
       "reticulócitos baixos",
-      "medula óssea hipocelular"
+      "medula óssea hipocelular",
+      "neutropenia grave",
+      "plaquetopenia grave"
     ],
     "explicacao": "A anemia aplásica é uma falência medular com pancitopenia e hipocelularidade de medula óssea, associada a risco infeccioso e hemorrágico.",
     "fonte": "Resumo próprio baseado em hematologia clínica"

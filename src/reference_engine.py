@@ -152,7 +152,11 @@ def _upsert_catalog_entry(
     _save_catalog(catalog)
 
 
-def _ingest_pdf_path(pdf_path: Path) -> None:
+MAX_PDF_SIZE_MB = 5  # Skip PDFs larger than 5MB during auto-ingestion
+_auto_ingested = False  # Flag to avoid repeated processing
+
+
+def _ingest_pdf_path(pdf_path: Path, force: bool = False) -> None:
     if not pdf_path.exists() or pdf_path.suffix.lower() != ".pdf":
         return
 
@@ -174,6 +178,11 @@ def _ingest_pdf_path(pdf_path: Path) -> None:
                     item["version"] = version
                 _save_catalog(existing_catalog)
                 return
+
+    # Skip very large PDFs during automatic ingestion (unless forced)
+    file_size_mb = pdf_path.stat().st_size / (1024 * 1024)
+    if not force and file_size_mb > MAX_PDF_SIZE_MB:
+        return
 
     try:
         raw_bytes = pdf_path.read_bytes()
@@ -203,6 +212,11 @@ def _ingest_pdf_path(pdf_path: Path) -> None:
 
 
 def auto_ingest_local_references() -> None:
+    global _auto_ingested
+    if _auto_ingested:
+        return
+    _auto_ingested = True
+
     _ensure_reference_dir()
     _ensure_local_reference_dir()
 
@@ -336,6 +350,9 @@ def _build_context(
     keywords = [word.lower() for word in _keywords_for_tema(tema)]
     ranked: list[tuple[int, str]] = []
 
+    MAX_FILE_CHARS = 8_000_000  # Allow large reference books (Guyton, Harrison, Current)
+    MAX_CHUNKS_PER_FILE = 2000  # Limit chunks per file for performance
+
     for item in catalog:
         text_file = item.get("text_file", "")
         category = item.get("category", "geral")
@@ -348,8 +365,16 @@ def _build_context(
         if not txt_path.exists():
             continue
 
+        # Skip very large files to avoid performance issues
+        try:
+            file_size = txt_path.stat().st_size
+            if file_size > MAX_FILE_CHARS:
+                continue
+        except Exception:
+            continue
+
         content = txt_path.read_text(encoding="utf-8", errors="ignore")
-        chunks = re.split(r"\n{2,}", content)
+        chunks = re.split(r"\n{2,}", content)[:MAX_CHUNKS_PER_FILE]
         category_bonus = 2 if preferred_set and category in preferred_set else 0
 
         for chunk in chunks:
