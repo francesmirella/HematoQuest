@@ -6,190 +6,219 @@
   <title>Connections - Anemias</title>
   <style>
     :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --card-hover: #334155;
-      --text: #e2e8f0;
-      --muted: #94a3b8;
-      --selected: #0ea5e9;
-      --ok: #22c55e;
-      --warn: #f59e0b;
-      --err: #ef4444;
-      --easy: #fde047;
-      --medium-easy: #86efac;
-      --medium: #60a5fa;
-      --hard: #c084fc;
+      --bg: #f7f6f2;
+      --ink: #1f1f1f;
+      --muted: #666;
+      --tile: #efede6;
+      --tile-border: #d8d4c8;
+      --tile-selected: #58534a;
+      --tile-selected-text: #fff;
+      --btn: #111;
+      --btn-text: #fff;
+      --easy: #f9df6d;
+      --medium-easy: #a0c35a;
+      --medium: #b0c4ef;
+      --hard: #ba81c5;
     }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
       background: var(--bg);
-      color: var(--text);
+      color: var(--ink);
       min-height: 100vh;
       display: grid;
       place-items: center;
-      padding: 20px;
+      padding: 16px;
     }
+
     .app {
-      width: min(900px, 100%);
-      background: #0b1222;
-      border: 1px solid #1f2a44;
-      border-radius: 16px;
-      padding: 18px;
+      width: min(720px, 100%);
+      text-align: center;
     }
-    h1 { margin: 0 0 6px; font-size: 1.4rem; }
-    p { margin: 0; color: var(--muted); }
-    .top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
+
+    h1 {
+      margin: 0;
+      font-size: 2rem;
+      letter-spacing: .02em;
     }
-    .status { color: var(--muted); font-size: .95rem; }
+
+    .subtitle {
+      margin: 8px 0 10px;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
     .legend {
-      margin: 10px 0 4px;
       display: flex;
+      justify-content: center;
       gap: 8px;
       flex-wrap: wrap;
+      margin-bottom: 10px;
     }
-    .pill {
+
+    .badge {
       border-radius: 999px;
-      padding: 5px 10px;
-      font-size: .8rem;
+      padding: 4px 10px;
+      font-size: .78rem;
       font-weight: 700;
-      color: #0b1222;
     }
-    .pill.easy { background: var(--easy); }
-    .pill.medium-easy { background: var(--medium-easy); }
-    .pill.medium { background: var(--medium); }
-    .pill.hard { background: var(--hard); }
+
+    .easy { background: var(--easy); }
+    .medium-easy { background: var(--medium-easy); }
+    .medium { background: var(--medium); }
+    .hard { background: var(--hard); }
+
+    .groups {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .group-row {
+      border-radius: 8px;
+      padding: 12px 10px;
+      text-align: center;
+      animation: dropIn .35s ease both;
+    }
+
+    .group-row h3 {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: .01em;
+    }
+
+    .group-row p {
+      margin: 6px 0 0;
+      font-size: .9rem;
+    }
+
+    .meta {
+      margin-top: 4px;
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      opacity: .85;
+      font-weight: 700;
+    }
+
     .grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(130px, 1fr));
-      gap: 10px;
-      margin: 14px 0;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
     }
+
     .tile {
-      border: 1px solid #26324d;
-      background: var(--card);
-      color: var(--text);
-      border-radius: 10px;
-      padding: 12px;
-      min-height: 64px;
-      font-weight: 600;
+      border: 1px solid var(--tile-border);
+      background: var(--tile);
+      border-radius: 8px;
+      min-height: 72px;
+      padding: 8px;
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--ink);
       cursor: pointer;
-      text-align: center;
-      transition: .15s ease;
-      user-select: none;
+      transition: transform .08s ease, background .12s ease;
     }
-    .tile:hover { background: var(--card-hover); }
+
+    .tile:hover { transform: translateY(-1px); }
+
     .tile.selected {
-      border-color: #38bdf8;
-      background: #0c4a6e;
+      background: var(--tile-selected);
+      color: var(--tile-selected-text);
+      border-color: var(--tile-selected);
     }
-    .tile.locked {
-      cursor: default;
-      border-color: #3f556f;
-      opacity: 0.86;
+
+    .mistakes {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: .92rem;
     }
+
+    .dots { display: flex; gap: 6px; }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #111;
+      opacity: .15;
+    }
+
+    .dot.active { opacity: 1; }
+
     .controls {
       display: flex;
+      justify-content: center;
       gap: 8px;
       flex-wrap: wrap;
+      margin-bottom: 8px;
     }
+
     button {
-      border: 1px solid #2f3b59;
-      background: #17223a;
-      color: var(--text);
-      padding: 10px 14px;
-      border-radius: 8px;
+      border: 1px solid #bdb8ac;
+      background: #fff;
+      color: #222;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-weight: 700;
       cursor: pointer;
-      font-weight: 600;
+      font-size: .9rem;
     }
-    button:hover { background: #243353; }
+
+    button.primary {
+      background: var(--btn);
+      color: var(--btn-text);
+      border-color: var(--btn);
+    }
+
     .message {
-      margin-top: 12px;
-      min-height: 24px;
-      font-weight: 600;
+      min-height: 22px;
+      font-size: .94rem;
+      color: var(--muted);
+      margin-bottom: 8px;
     }
-    .ok { color: var(--ok); }
-    .warn { color: var(--warn); }
-    .err { color: var(--err); }
-    .groups {
-      margin-top: 12px;
-      display: grid;
-      gap: 8px;
-    }
-    .group {
-      border-radius: 10px;
-      padding: 10px;
-      border: 1px solid #33415f;
-      background: #111a2f;
-      opacity: 1;
-    }
-    .group.easy { background: color-mix(in srgb, var(--easy) 18%, #111a2f); border-color: color-mix(in srgb, var(--easy) 45%, #33415f); }
-    .group.medium-easy { background: color-mix(in srgb, var(--medium-easy) 16%, #111a2f); border-color: color-mix(in srgb, var(--medium-easy) 40%, #33415f); }
-    .group.medium { background: color-mix(in srgb, var(--medium) 16%, #111a2f); border-color: color-mix(in srgb, var(--medium) 40%, #33415f); }
-    .group.hard { background: color-mix(in srgb, var(--hard) 16%, #111a2f); border-color: color-mix(in srgb, var(--hard) 40%, #33415f); }
-    .group.reveal {
-      animation: popIn .45s ease both;
-    }
-    .group h3 {
-      margin: 0 0 6px;
-      font-size: .98rem;
-      color: #cbd5e1;
-    }
-    .group p {
-      margin: 0;
-      color: #dbe5f5;
-      font-weight: 600;
-    }
-    .group .meta {
-      margin-bottom: 6px;
-      font-size: .78rem;
-      font-weight: 800;
-      color: #e2e8f0;
-      opacity: .9;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-    }
-    @keyframes popIn {
-      from { opacity: 0; transform: translateY(8px) scale(0.98); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
+
+    @keyframes dropIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
   <main class="app">
-    <div class="top">
-      <div>
-        <h1>Connections - Anemias</h1>
-        <p>Selecione 4 termos que pertençam ao mesmo grupo.</p>
-      </div>
-      <div class="status" id="status">Erros restantes: 4</div>
-    </div>
+    <h1>Connections</h1>
+    <div class="subtitle">Anemias · encontre 4 grupos de 4 termos</div>
 
     <div class="legend">
-      <span class="pill easy">Fácil</span>
-      <span class="pill medium-easy">Médio-fácil</span>
-      <span class="pill medium">Médio</span>
-      <span class="pill hard">Difícil</span>
+      <span class="badge easy">Fácil</span>
+      <span class="badge medium-easy">Médio-fácil</span>
+      <span class="badge medium">Médio</span>
+      <span class="badge hard">Difícil</span>
     </div>
 
+    <section class="groups" id="foundGroups"></section>
     <section class="grid" id="grid"></section>
 
+    <div class="mistakes">
+      <span>Erros restantes</span>
+      <div class="dots" id="mistakeDots"></div>
+    </div>
+
     <div class="controls">
-      <button id="submitBtn">Confirmar grupo</button>
-      <button id="clearBtn">Limpar seleção</button>
       <button id="shuffleBtn">Embaralhar</button>
+      <button id="clearBtn">Desmarcar</button>
+      <button id="submitBtn" class="primary">Enviar</button>
       <button id="newBtn">Novo jogo</button>
     </div>
 
     <div class="message" id="message"></div>
-    <section class="groups" id="foundGroups"></section>
   </main>
 
   <script>
@@ -198,52 +227,42 @@
         name: "Ferropriva",
         difficulty: "easy",
         difficultyLabel: "Fácil",
-        items: ["Ferritina baixa", "TIBC elevado", "Microcitose", "Hipocromia"]
+        items: ["Ferritina baixa", "TIBC elevado", "Microcitose", "Hipocromia"],
       },
       {
-        name: "Megaloblástica (B12)",
+        name: "Megaloblástica B12",
         difficulty: "medium-easy",
         difficultyLabel: "Médio-fácil",
-        items: ["VCM > 100 fL", "Neutrófilos hipersegmentados", "Ácido metilmalônico alto", "Parestesias"]
+        items: ["VCM > 100 fL", "Hipersegmentação", "Metilmalônico alto", "Parestesias"],
       },
       {
         name: "Hemólise",
         difficulty: "medium",
         difficultyLabel: "Médio",
-        items: ["LDH elevado", "Bilirrubina indireta alta", "Haptoglobina baixa", "Reticulocitose"]
+        items: ["LDH elevado", "BI elevada", "Haptoglobina baixa", "Reticulocitose"],
       },
       {
         name: "Aplásica",
         difficulty: "hard",
         difficultyLabel: "Difícil",
-        items: ["Pancitopenia", "Reticulócitos baixos", "Medula hipocelular", "Sem esplenomegalia"]
-      }
+        items: ["Pancitopenia", "Reticulócitos baixos", "Medula hipocelular", "Sem esplenomegalia"],
+      },
     ];
 
     const grid = document.getElementById('grid');
-    const message = document.getElementById('message');
-    const status = document.getElementById('status');
     const foundGroups = document.getElementById('foundGroups');
+    const message = document.getElementById('message');
+    const mistakeDots = document.getElementById('mistakeDots');
 
-    const submitBtn = document.getElementById('submitBtn');
-    const clearBtn = document.getElementById('clearBtn');
     const shuffleBtn = document.getElementById('shuffleBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const submitBtn = document.getElementById('submitBtn');
     const newBtn = document.getElementById('newBtn');
 
     let tiles = [];
     let selected = new Set();
     let solvedGroups = new Set();
     let mistakesLeft = 4;
-
-    function difficultyRank(level) {
-      const map = {
-        "easy": 1,
-        "medium-easy": 2,
-        "medium": 3,
-        "hard": 4,
-      };
-      return map[level] || 99;
-    }
 
     function shuffle(arr) {
       const clone = [...arr];
@@ -254,139 +273,152 @@
       return clone;
     }
 
-    function setupGame() {
-      selected.clear();
-      solvedGroups.clear();
-      mistakesLeft = 4;
-      message.textContent = '';
-      message.className = 'message';
-      foundGroups.innerHTML = '';
-      status.textContent = `Erros restantes: ${mistakesLeft}`;
-
-      const flat = SOURCE_GROUPS.flatMap(group => group.items.map(item => ({
-        item,
-        group: group.name,
-        locked: false,
-      })));
-
-      tiles = shuffle(flat);
-      render();
+    function difficultyRank(level) {
+      const rank = { easy: 1, 'medium-easy': 2, medium: 3, hard: 4 };
+      return rank[level] || 99;
     }
 
-    function render() {
+    function setMessage(text) {
+      message.textContent = text;
+    }
+
+    function renderMistakes() {
+      mistakeDots.innerHTML = '';
+      for (let i = 0; i < 4; i++) {
+        const dot = document.createElement('span');
+        dot.className = `dot ${i < mistakesLeft ? 'active' : ''}`;
+        mistakeDots.appendChild(dot);
+      }
+    }
+
+    function buildTiles() {
+      return SOURCE_GROUPS.flatMap(group =>
+        group.items.map(item => ({ item, group: group.name, locked: false }))
+      );
+    }
+
+    function renderGrid() {
       grid.innerHTML = '';
       for (const tile of tiles) {
         if (tile.locked) continue;
-        const btn = document.createElement('button');
-        btn.className = 'tile';
-        btn.textContent = tile.item;
-        if (selected.has(tile.item)) btn.classList.add('selected');
-        btn.onclick = () => toggleSelect(tile.item);
-        grid.appendChild(btn);
+        const button = document.createElement('button');
+        button.className = `tile ${selected.has(tile.item) ? 'selected' : ''}`;
+        button.textContent = tile.item;
+        button.onclick = () => toggleSelect(tile.item);
+        grid.appendChild(button);
       }
     }
 
-    function toggleSelect(item) {
-      if (selected.has(item)) {
-        selected.delete(item);
-      } else {
-        if (selected.size >= 4) return;
-        selected.add(item);
-      }
-      render();
-    }
-
-    function clearSelection() {
-      selected.clear();
-      render();
-      setMessage('Seleção limpa.', 'warn');
-    }
-
-    function setMessage(text, type) {
-      message.textContent = text;
-      message.className = `message ${type || ''}`;
-    }
-
-    function appendGroupCard(group, withAnimation = false, delayMs = 0) {
-      const card = document.createElement('article');
-      card.className = `group ${group.difficulty}`;
-      if (withAnimation) card.classList.add('reveal');
-      if (withAnimation) card.style.animationDelay = `${delayMs}ms`;
-      card.innerHTML = `
-        <div class="meta">${group.difficultyLabel}</div>
+    function appendSolvedGroup(group, delay = 0) {
+      const row = document.createElement('article');
+      row.className = `group-row ${group.difficulty}`;
+      row.style.animationDelay = `${delay}ms`;
+      row.innerHTML = `
         <h3>${group.name}</h3>
+        <div class="meta">${group.difficultyLabel}</div>
         <p>${group.items.join(' · ')}</p>
       `;
-      foundGroups.appendChild(card);
+      foundGroups.appendChild(row);
     }
 
-    function revealAllGroupsAnimated() {
+    function lockGroup(group) {
+      solvedGroups.add(group.name);
+      tiles = tiles.map(t => group.items.includes(t.item) ? { ...t, locked: true } : t);
+      appendSolvedGroup(group);
+      selected.clear();
+      renderGrid();
+    }
+
+    function checkOneAway(picks) {
+      return SOURCE_GROUPS.some(group => {
+        const hits = group.items.filter(i => picks.includes(i)).length;
+        return hits === 3;
+      });
+    }
+
+    function revealAllAnimated() {
       foundGroups.innerHTML = '';
       const ordered = [...SOURCE_GROUPS].sort((a, b) => difficultyRank(a.difficulty) - difficultyRank(b.difficulty));
-      ordered.forEach((group, idx) => appendGroupCard(group, true, idx * 180));
+      ordered.forEach((group, idx) => appendSolvedGroup(group, idx * 170));
       submitBtn.disabled = true;
       clearBtn.disabled = true;
-      status.textContent = 'Rodada finalizada — respostas reveladas';
     }
 
-    function lockSolved(groupName, items) {
-      solvedGroups.add(groupName);
-      tiles = tiles.map(t => items.includes(t.item) ? { ...t, locked: true } : t);
-      const group = SOURCE_GROUPS.find(g => g.name === groupName);
-      appendGroupCard(group);
-      selected.clear();
-      render();
-    }
-
-    function checkSelection() {
+    function submitSelection() {
       if (selected.size !== 4) {
-        setMessage('Selecione exatamente 4 termos.', 'warn');
+        setMessage('Selecione exatamente 4 termos.');
         return;
       }
 
       const picks = [...selected];
-      const match = SOURCE_GROUPS.find(group =>
-        group.items.every(item => picks.includes(item))
-      );
+      const match = SOURCE_GROUPS.find(group => group.items.every(item => picks.includes(item)));
 
       if (match && !solvedGroups.has(match.name)) {
-        lockSolved(match.name, match.items);
-        setMessage(`Correto: grupo "${match.name}" encontrado.`, 'ok');
-        if (solvedGroups.size === SOURCE_GROUPS.length) {
-          setMessage('Parabéns! Você completou todos os grupos. Revelando respostas por dificuldade...', 'ok');
-          setTimeout(() => revealAllGroupsAnimated(), 250);
+        lockGroup(match);
+        if (solvedGroups.size === 4) {
+          setMessage('Excelente! Todas as categorias encontradas.');
+          setTimeout(revealAllAnimated, 220);
+        } else {
+          setMessage(`Correto: ${match.name}.`);
         }
         return;
       }
 
       mistakesLeft -= 1;
-      status.textContent = `Erros restantes: ${mistakesLeft}`;
+      renderMistakes();
       if (mistakesLeft <= 0) {
-        setMessage('Fim de jogo. Revelando as respostas por dificuldade...', 'err');
+        setMessage('Fim da rodada. Revelando respostas...');
         selected.clear();
-        render();
-        revealAllGroupsAnimated();
+        renderGrid();
+        revealAllAnimated();
+        return;
+      }
+
+      if (checkOneAway(picks)) {
+        setMessage('Quase! Você está a 1 termo de um grupo correto.');
       } else {
-        setMessage('Grupo incorreto. Tente outra combinação.', 'err');
+        setMessage('Grupo incorreto. Tente outra combinação.');
       }
     }
 
-    submitBtn.addEventListener('click', checkSelection);
-    clearBtn.addEventListener('click', clearSelection);
+    function toggleSelect(item) {
+      if (selected.has(item)) selected.delete(item);
+      else {
+        if (selected.size >= 4) return;
+        selected.add(item);
+      }
+      renderGrid();
+    }
+
+    function startGame() {
+      selected.clear();
+      solvedGroups.clear();
+      mistakesLeft = 4;
+      submitBtn.disabled = false;
+      clearBtn.disabled = false;
+      foundGroups.innerHTML = '';
+      setMessage('');
+      tiles = shuffle(buildTiles());
+      renderGrid();
+      renderMistakes();
+    }
+
+    submitBtn.addEventListener('click', submitSelection);
+    clearBtn.addEventListener('click', () => {
+      selected.clear();
+      renderGrid();
+      setMessage('Seleção limpa.');
+    });
     shuffleBtn.addEventListener('click', () => {
       const unlocked = tiles.filter(t => !t.locked);
       const locked = tiles.filter(t => t.locked);
       tiles = [...shuffle(unlocked), ...locked];
-      render();
-      setMessage('Termos embaralhados.', 'warn');
+      renderGrid();
+      setMessage('Tabuleiro embaralhado.');
     });
-    newBtn.addEventListener('click', () => {
-      submitBtn.disabled = false;
-      clearBtn.disabled = false;
-      setupGame();
-    });
+    newBtn.addEventListener('click', startGame);
 
-    setupGame();
+    startGame();
   </script>
 </body>
 </html>

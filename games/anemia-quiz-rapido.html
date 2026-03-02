@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Relâmpago - Anemias</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #f6f5ef; color: #1e1e1e; }
+    .app { max-width: 760px; margin: 30px auto; padding: 0 16px; }
+    .card { background: #fff; border: 1px solid #ddd6c8; border-radius: 12px; padding: 16px; }
+    h1 { margin: 0 0 6px; }
+    .meta { color: #666; margin-bottom: 12px; }
+    .q { font-size: 1.05rem; margin-bottom: 10px; }
+    .opts { display: grid; gap: 8px; }
+    button.opt { text-align: left; border: 1px solid #cfc9bc; background: #f8f7f3; border-radius: 8px; padding: 10px; cursor: pointer; }
+    button.opt:hover { background: #efede5; }
+    .ok { border-color: #2f9e44 !important; background: #e9f8ee !important; }
+    .bad { border-color: #d9480f !important; background: #fff4ec !important; }
+    .footer { margin-top: 12px; display: flex; gap: 8px; }
+    .main-btn { border: none; border-radius: 999px; padding: 10px 14px; background: #111; color: #fff; cursor: pointer; font-weight: 700; }
+    a { text-decoration: none; color: #111; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <a href="./index.html">← Voltar aos jogos</a>
+    <section class="card">
+      <h1>Quiz Relâmpago</h1>
+      <div class="meta" id="meta"></div>
+      <div class="q" id="question"></div>
+      <div class="opts" id="options"></div>
+      <div class="footer">
+        <button class="main-btn" id="nextBtn" disabled>Próxima</button>
+        <button class="main-btn" id="restartBtn">Reiniciar</button>
+      </div>
+      <div id="result" style="margin-top:10px;color:#555;"></div>
+    </section>
+  </main>
+
+  <script>
+    const BANK = [
+      {q:'Ferritina < 30 ng/mL com TIBC alto sugere:', a:['Anemia ferropriva','Anemia da inflamação','Aplasia medular','PTT'], c:0},
+      {q:'Coombs direto positivo favorece:', a:['G6PD','AHAI','Esferocitose hereditária','Aplasia'], c:1},
+      {q:'Pancitopenia + reticulócitos baixos sugere:', a:['Hemólise compensada','Anemia aplásica','Talassemia minor','Ferropenia isolada'], c:1},
+      {q:'Esquizócitos + plaquetopenia importante levantam:', a:['PTT','AHAI quente','Def. B12','Ferropenia'], c:0},
+      {q:'VCM alto + neutrófilos hipersegmentados apontam para:', a:['Anemia megaloblástica','Anemia ferropriva','Aplasia','PTT'], c:0},
+      {q:'Haptoglobina muito baixa é marcador típico de:', a:['Hemólise','Ferropenia','Aplasia','Talassemia minor'], c:0},
+    ];
+
+    const TOTAL = 5;
+    const questionEl = document.getElementById('question');
+    const optionsEl = document.getElementById('options');
+    const metaEl = document.getElementById('meta');
+    const resultEl = document.getElementById('result');
+    const nextBtn = document.getElementById('nextBtn');
+    const restartBtn = document.getElementById('restartBtn');
+
+    let quiz = [];
+    let i = 0;
+    let score = 0;
+    let locked = false;
+
+    function shuffle(arr){
+      const c=[...arr];
+      for(let k=c.length-1;k>0;k--){
+        const j=Math.floor(Math.random()*(k+1));
+        [c[k],c[j]]=[c[j],c[k]];
+      }
+      return c;
+    }
+
+    function init(){
+      quiz = shuffle(BANK).slice(0,TOTAL);
+      i = 0;
+      score = 0;
+      locked = false;
+      resultEl.textContent = '';
+      nextBtn.disabled = true;
+      render();
+    }
+
+    function render(){
+      const item = quiz[i];
+      metaEl.textContent = `Pergunta ${i+1} de ${TOTAL} · Pontos: ${score}`;
+      questionEl.textContent = item.q;
+      optionsEl.innerHTML = '';
+      locked = false;
+      nextBtn.disabled = true;
+
+      item.a.forEach((text, idx)=>{
+        const btn = document.createElement('button');
+        btn.className = 'opt';
+        btn.textContent = text;
+        btn.onclick = ()=>answer(idx, btn);
+        optionsEl.appendChild(btn);
+      });
+    }
+
+    function answer(idx, btn){
+      if(locked) return;
+      locked = true;
+      const item = quiz[i];
+      const buttons = [...optionsEl.querySelectorAll('.opt')];
+      buttons[item.c].classList.add('ok');
+      if(idx === item.c){
+        score += 1;
+      } else {
+        btn.classList.add('bad');
+      }
+      nextBtn.disabled = false;
+    }
+
+    nextBtn.onclick = ()=>{
+      i += 1;
+      if(i >= TOTAL){
+        questionEl.textContent = 'Fim do quiz!';
+        optionsEl.innerHTML = '';
+        metaEl.textContent = `Pontuação final: ${score}/${TOTAL}`;
+        resultEl.textContent = score >= 4 ? 'Excelente desempenho.' : 'Bom treino. Repita para fixar melhor.';
+        nextBtn.disabled = true;
+        return;
+      }
+      render();
+    };
+
+    restartBtn.onclick = init;
+    init();
+  </script>
+</body>
+</html>

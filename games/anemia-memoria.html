@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memória Clínica - Anemias</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #f6f5ef; color: #222; }
+    .app { max-width: 840px; margin: 28px auto; padding: 0 16px; }
+    .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .grid { margin-top: 14px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .card {
+      border: 1px solid #d6cfbf;
+      background: #fff;
+      border-radius: 10px;
+      min-height: 82px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 8px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .card.hidden { background: #ece9df; color: transparent; }
+    .card.matched { background: #e6f5ea; border-color: #8ac49a; cursor: default; }
+    .meta { color: #666; }
+    button { border: none; border-radius: 999px; padding: 9px 14px; background: #111; color: #fff; cursor: pointer; font-weight: 700; }
+    a { text-decoration: none; color: #111; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <a href="./index.html">← Voltar aos jogos</a>
+    <div class="top">
+      <div>
+        <h1>Memória Clínica</h1>
+        <div class="meta" id="meta">Jogadas: 0 · Pares: 0/6</div>
+      </div>
+      <button id="resetBtn">Reiniciar</button>
+    </div>
+
+    <section class="grid" id="grid"></section>
+  </main>
+
+  <script>
+    const PAIRS = [
+      ['Anemia ferropriva', 'Ferritina baixa'],
+      ['AHAI', 'Coombs direto positivo'],
+      ['PTT', 'Esquizócitos + plaquetopenia'],
+      ['Megaloblástica B12', 'Neutrófilos hipersegmentados'],
+      ['Aplásica', 'Pancitopenia + medula hipocelular'],
+      ['Hemólise', 'Haptoglobina baixa'],
+    ];
+
+    const grid = document.getElementById('grid');
+    const meta = document.getElementById('meta');
+    const resetBtn = document.getElementById('resetBtn');
+
+    let cards = [];
+    let opened = [];
+    let moves = 0;
+    let matched = 0;
+    let lock = false;
+
+    function shuffle(arr){
+      const c=[...arr];
+      for(let i=c.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [c[i],c[j]]=[c[j],c[i]];
+      }
+      return c;
+    }
+
+    function init(){
+      moves = 0;
+      matched = 0;
+      opened = [];
+      lock = false;
+
+      const pool = [];
+      PAIRS.forEach((pair, idx)=>{
+        pool.push({text: pair[0], pairId: idx, open: false, done: false});
+        pool.push({text: pair[1], pairId: idx, open: false, done: false});
+      });
+      cards = shuffle(pool);
+      render();
+    }
+
+    function render(){
+      grid.innerHTML='';
+      cards.forEach((card, idx)=>{
+        const el = document.createElement('button');
+        const classes = ['card'];
+        if(!card.open && !card.done) classes.push('hidden');
+        if(card.done) classes.push('matched');
+        el.className = classes.join(' ');
+        el.textContent = card.text;
+        el.disabled = card.done;
+        el.onclick = ()=>flip(idx);
+        grid.appendChild(el);
+      });
+      meta.textContent = `Jogadas: ${moves} · Pares: ${matched}/${PAIRS.length}`;
+    }
+
+    function flip(idx){
+      if(lock) return;
+      const card = cards[idx];
+      if(card.open || card.done) return;
+
+      card.open = true;
+      opened.push(idx);
+      render();
+
+      if(opened.length < 2) return;
+
+      moves += 1;
+      const [a, b] = opened;
+      const c1 = cards[a];
+      const c2 = cards[b];
+
+      if(c1.pairId === c2.pairId){
+        c1.done = true;
+        c2.done = true;
+        matched += 1;
+        opened = [];
+        render();
+        return;
+      }
+
+      lock = true;
+      setTimeout(()=>{
+        c1.open = false;
+        c2.open = false;
+        opened = [];
+        lock = false;
+        render();
+      }, 700);
+    }
+
+    resetBtn.onclick = init;
+    init();
+  </script>
+</body>
+</html>
